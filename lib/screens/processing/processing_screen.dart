@@ -19,8 +19,10 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint('[CaptionIQ] ProcessingScreen.initState() — new State instance created');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final stage = ref.read(scanControllerProvider).stage;
+      debugPrint('[CaptionIQ] ProcessingScreen post-frame check, stage=$stage');
       if (stage == ScanStage.picking || stage == ScanStage.error) {
         ref.read(scanControllerProvider.notifier).startScan();
       }

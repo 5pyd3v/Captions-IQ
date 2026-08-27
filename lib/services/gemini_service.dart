@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../core/config/gemini_config.dart';
 
@@ -59,8 +62,6 @@ screenshot numbers, timestamps, or meta-commentary about the OCR process.
       throw GeminiException('No readable text was found in these screenshots.');
     }
 
-    final uri = Uri.parse(GeminiConfig.endpoint(apiKey.trim()));
-
     final body = jsonEncode({
       'contents': [
         {
@@ -85,13 +86,38 @@ screenshot numbers, timestamps, or meta-commentary about the OCR process.
       },
     });
 
+    final sw = Stopwatch()..start();
+    debugPrint('[CaptionIQ] Gemini POST starting, body=${body.length} bytes, timeout=${GeminiConfig.requestTimeout.inSeconds}s');
+
     late final http.Response response;
     try {
       response = await http
-          .post(uri, headers: {'Content-Type': 'application/json'}, body: body)
-          .timeout(const Duration(seconds: 90));
-    } catch (e) {
-      throw GeminiException('Could not reach Gemini. Check your internet connection.');
+          .post(
+            GeminiConfig.endpoint,
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey.trim(),
+            },
+            body: body,
+          )
+          .timeout(GeminiConfig.requestTimeout);
+      debugPrint('[CaptionIQ] Gemini POST returned status=${response.statusCode} after ${sw.elapsedMilliseconds}ms');
+    } on TimeoutException {
+      debugPrint('[CaptionIQ] Gemini POST timed out after ${sw.elapsedMilliseconds}ms');
+      throw GeminiException(
+        'Gemini took longer than ${GeminiConfig.requestTimeout.inSeconds}s to respond — '
+        'this can happen on a slow connection with a large batch of screenshots. '
+        'Try again, or scan fewer screenshots at once.',
+      );
+    } on SocketException catch (e) {
+      debugPrint('[CaptionIQ] SocketException after ${sw.elapsedMilliseconds}ms: $e');
+      throw GeminiException('Could not reach Gemini: no network connection (${e.osError?.message ?? e.message}).');
+    } on HandshakeException catch (e) {
+      debugPrint('[CaptionIQ] HandshakeException after ${sw.elapsedMilliseconds}ms: $e');
+      throw GeminiException('Could not reach Gemini: a secure connection could not be established.');
+    } catch (e, st) {
+      debugPrint('[CaptionIQ] Unexpected HTTP error after ${sw.elapsedMilliseconds}ms: $e\n$st');
+      throw GeminiException('Could not reach Gemini: ${e.runtimeType}.');
     }
 
     if (response.statusCode == 400 || response.statusCode == 403) {

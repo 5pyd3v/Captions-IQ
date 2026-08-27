@@ -15,7 +15,7 @@ class SupabaseConfig {
 
   static const String url = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: 'https://YOUR-PROJECT-REF.supabase.co',
+    defaultValue: 'https://ijouqwrpwmnaerudwqgd.supabase.co',
   );
 
   static const String anonKey = String.fromEnvironment(

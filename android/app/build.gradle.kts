@@ -30,6 +30,16 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // R8 was stripping the launcher Activity along with ML Kit's
+            // optional script classes; code shrinking isn't needed for a
+            // test/side-loaded build, so it's off to keep the release
+            // build reliable.
+            isMinifyEnabled = false
+            isShrinkResources = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }

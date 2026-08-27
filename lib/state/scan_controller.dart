@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/history_item.dart';
 import '../services/gemini_service.dart';
@@ -76,6 +77,7 @@ class ScanController extends StateNotifier<ScanState> {
   }
 
   Future<void> startScan() async {
+    debugPrint('[CaptionIQ] startScan() called, stage=${state.stage}, images=${state.images.length}');
     if (state.images.isEmpty) return;
 
     final apiKey = _ref.read(settingsProvider).geminiApiKey ?? '';
@@ -113,6 +115,7 @@ class ScanController extends StateNotifier<ScanState> {
       }
 
       state = state.copyWith(stage: ScanStage.summarizing);
+      debugPrint('[CaptionIQ] OCR done, ${ocrResult.combinedText.length} chars. Calling Gemini...');
 
       final summary = await _gemini.summarize(
         apiKey: apiKey,
@@ -132,9 +135,12 @@ class ScanController extends StateNotifier<ScanState> {
       _ref.read(historyProvider.notifier).prepend(saved);
 
       state = state.copyWith(stage: ScanStage.success, result: saved);
+      debugPrint('[CaptionIQ] Success.');
     } on GeminiException catch (e) {
+      debugPrint('[CaptionIQ] GeminiException: ${e.message}');
       state = state.copyWith(stage: ScanStage.error, errorMessage: e.message);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[CaptionIQ] Unexpected error: $e\n$st');
       state = state.copyWith(
         stage: ScanStage.error,
         errorMessage: 'Something went wrong while processing. Please try again.',
