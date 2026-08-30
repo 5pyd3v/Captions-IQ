@@ -4,11 +4,18 @@
 class GeminiConfig {
   GeminiConfig._();
 
-  /// Model used for summarization. Pinned to Google's self-updating
-  /// "-latest" alias rather than a dated model id, since Gemini model
-  /// names get retired/renamed fairly often — this always resolves to
-  /// whatever Google currently recommends as its fast/cheap model.
-  static const String model = 'gemini-flash-latest';
+  /// Model used for summarization.
+  ///
+  /// NOTE: this used to be 'gemini-flash-latest'. That name looks like a
+  /// safe, auto-updating alias, but per Google's own model docs it
+  /// specifically points to an *experimental* release with tighter,
+  /// less reliable rate limits — not something meant for production
+  /// traffic. That's what was causing scans to fail with "temporarily
+  /// unavailable" so often. Pinned to an explicit stable/GA model id
+  /// instead. Re-check https://ai.google.dev/gemini-api/docs/models
+  /// before changing this, and avoid any other bare "-latest" alias —
+  /// whether it resolves to stable or experimental varies by model line.
+  static const String model = 'gemini-3.5-flash';
 
   /// No API key in the URL on purpose — it's sent via the `x-goog-api-key`
   /// header instead (see GeminiService), so it can never end up embedded

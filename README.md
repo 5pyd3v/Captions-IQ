@@ -1,9 +1,5 @@
 # Caption IQ
 
-Scan chat/caption screenshots (one or hundreds), extract their text on-device
-with Google ML Kit, and get a humanized summary in **English** and
-**Roman Urdu** — ready to copy or share straight to WhatsApp. Every summary
-is saved to a private history backed by Supabase.
 
 ## How it works
 
